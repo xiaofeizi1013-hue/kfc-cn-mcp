@@ -1,0 +1,67 @@
+# Hermes Agent MCP 配置片段
+#
+# 1) 先构建：npm install && npm run build
+# 2) 把下面的 kfc_cn 条目合并到 ~/.hermes/config.yaml 的 mcp_servers 下
+# 3) hermes mcp test kfc_cn
+# 4) 在会话里 /reload-mcp
+#
+# 注意：args 必须是 dist/index.js 的绝对路径；Windows 路径用正斜杠或双反斜杠。
+
+mcp_servers:
+  kfc_cn:
+    command: "node"
+    args:
+      - "C:/Users/you/kfc-cn-mcp/dist/index.js"
+
+    env:
+      # 会话 cookie、菜单缓存、购物车状态的存放目录（含敏感 cookie）
+      KFC_STATE_DIR: "C:/Users/you/.kfc-cn-mcp"
+      # 默认城市国标码：上海 310100 / 北京 110100 / 广州 440100 / 深圳 440300
+      KFC_CITY_CODE: "310100"
+      # 默认坐标（上海人民广场）；换成你的常用位置可让“附近门店”更准
+      KFC_LATITUDE: "31.2304"
+      KFC_LONGITUDE: "121.4737"
+      # 单次 HTTP 超时（毫秒）
+      KFC_HTTP_TIMEOUT_MS: "20000"
+
+    # 工具调用超时（秒）；下单接口偶尔较慢，建议 ≥60
+    timeout: 60
+    # 首次连接/initialize 超时（秒）
+    connect_timeout: 20
+    # 每个 Hermes 会话一个进程；不想常驻可设 lazy: true
+    lazy: false
+
+    tools:
+      # 白名单：只暴露这些工具。删掉 place_order 即可禁止真实下单。
+      include:
+        - find_stores
+        - select_store
+        - get_menu
+        - search_menu
+        - get_item
+        - cart_add
+        - cart_set_quantity
+        - cart_remove
+        - cart_clear
+        - cart_view
+        - preview_order
+        - place_order
+        - order_status
+        - session_status
+
+      # 本服务器不提供 resources / prompts，关掉对应包装工具
+      prompts: false
+      resources: false
+
+    # 如需限制并发（同一个状态目录不建议并发操作购物车）
+    supports_parallel_tool_calls: false
+
+# 只读模式示例：只查门店/菜单，不允许改购物车或下单
+#
+#   tools:
+#     include: [find_stores, select_store, get_menu, search_menu, get_item, cart_view, session_status]
+#
+# 禁止下单但允许加购：
+#
+#   tools:
+#     exclude: [place_order]
